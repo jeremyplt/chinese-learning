@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>练习写字 - Feuilles de pratique HSK3</title>
+<style>
+  @page { margin: 15mm; }
+  body { font-family: "Noto Sans SC", "SimSun", "STSong", serif; margin: 20px; }
+  h1 { text-align: center; font-size: 22px; margin-bottom: 5px; }
+  .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 20px; }
+  .char-row { 
+    display: flex; 
+    align-items: center; 
+    margin-bottom: 12px; 
+    page-break-inside: avoid; 
+  }
+  .char-info {
+    width: 110px;
+    font-size: 12px;
+    line-height: 1.3;
+    flex-shrink: 0;
+  }
+  .char-info .hanzi { font-size: 18px; font-weight: bold; }
+  .char-info .pinyin { color: #c0392b; font-size: 11px; }
+  .char-info .meaning { color: #666; font-size: 10px; }
+  .grid-container { display: flex; gap: 0; }
+  .cell {
+    width: 52px;
+    height: 52px;
+    border: 1.5px solid #333;
+    position: relative;
+    box-sizing: border-box;
+  }
+  .cell::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    width: 0; height: 100%;
+    border-left: 1px dashed #ccc;
+  }
+  .cell::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    width: 100%; height: 0;
+    border-top: 1px dashed #ccc;
+  }
+  .cell.model {
+    background: #fafafa;
+  }
+  .cell.model .char {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 36px;
+    color: #333;
+    z-index: 1;
+  }
+  .cell.ghost .char {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 36px;
+    color: #e0e0e0;
+    z-index: 1;
+  }
+  .page-break { page-break-after: always; }
+  .footer { text-align: center; color: #aaa; font-size: 10px; margin-top: 30px; }
+  @media print {
+    body { margin: 0; }
+    .no-print { display: none; }
+  }
+  .print-btn {
+    display: block; margin: 20px auto; padding: 12px 30px;
+    font-size: 16px; background: #c0392b; color: white; border: none;
+    border-radius: 6px; cursor: pointer;
+  }
+  .print-btn:hover { background: #e74c3c; }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button>
+
+<h1>练习写字 - Feuilles de Pratique</h1>
+<p class="subtitle">HSK3 - 20 Verbes Essentiels</p>
+
+<div id="sheets"></div>
+
+<div class="footer">chinese-learning / HSK3 练习</div>
+
+<script>
+const chars = [
+  {hanzi: "决", pinyin: "jué", meaning: "décider", word: "决定"},
+  {hanzi: "定", pinyin: "dìng", meaning: "décider", word: "决定"},
+  {hanzi: "关", pinyin: "guān", meaning: "se soucier", word: "关心"},
+  {hanzi: "心", pinyin: "xīn", meaning: "cœur", word: "关心"},
+  {hanzi: "解", pinyin: "jiě", meaning: "comprendre", word: "了解"},
+  {hanzi: "信", pinyin: "xìn", meaning: "croire", word: "相信"},
+  {hanzi: "担", pinyin: "dān", meaning: "s'inquiéter", word: "担心"},
+  {hanzi: "习", pinyin: "xí", meaning: "s'habituer", word: "习惯"},
+  {hanzi: "惯", pinyin: "guàn", meaning: "habitude", word: "习惯"},
+  {hanzi: "需", pinyin: "xū", meaning: "besoin", word: "需要"},
+  {hanzi: "发", pinyin: "fā", meaning: "découvrir", word: "发现"},
+  {hanzi: "现", pinyin: "xiàn", meaning: "apparaître", word: "发现"},
+  {hanzi: "决", pinyin: "jué", meaning: "résoudre", word: "解决"},
+  {hanzi: "变", pinyin: "biàn", meaning: "changer", word: "变化"},
+  {hanzi: "化", pinyin: "huà", meaning: "transformation", word: "变化"},
+  {hanzi: "检", pinyin: "jiǎn", meaning: "vérifier", word: "检查"},
+  {hanzi: "查", pinyin: "chá", meaning: "examiner", word: "检查"},
+  {hanzi: "选", pinyin: "xuǎn", meaning: "choisir", word: "选择"},
+  {hanzi: "择", pinyin: "zé", meaning: "choisir", word: "选择"},
+  {hanzi: "较", pinyin: "jiào", meaning: "comparer", word: "比较"},
+  {hanzi: "影", pinyin: "yǐng", meaning: "influencer", word: "影响"},
+  {hanzi: "响", pinyin: "xiǎng", meaning: "résonner", word: "影响"},
+  {hanzi: "根", pinyin: "gēn", meaning: "racine/selon", word: "根据"},
+  {hanzi: "据", pinyin: "jù", meaning: "selon", word: "根据"},
+  {hanzi: "参", pinyin: "cān", meaning: "participer", word: "参加"},
+  {hanzi: "提", pinyin: "tí", meaning: "améliorer", word: "提高"},
+  {hanzi: "注", pinyin: "zhù", meaning: "attention", word: "注意"},
+  {hanzi: "意", pinyin: "yì", meaning: "sens/idée", word: "注意"},
+  {hanzi: "记", pinyin: "jì", meaning: "se souvenir", word: "记得"},
+  {hanzi: "接", pinyin: "jiē", meaning: "accepter", word: "接受"},
+  {hanzi: "受", pinyin: "shòu", meaning: "recevoir", word: "接受"},
+];
+
+// Remove duplicates by hanzi
+const seen = new Set();
+const unique = chars.filter(c => { if(seen.has(c.hanzi)) return false; seen.add(c.hanzi); return true; });
+
+const container = document.getElementById('sheets');
+const PRACTICE_CELLS = 7; // 1 model + 1 ghost + 5 empty
+
+unique.forEach((c, i) => {
+  const row = document.createElement('div');
+  row.className = 'char-row';
+  
+  let info = `<div class="char-info">
+    <div class="hanzi">${c.word} </div>
+    <div class="pinyin">${c.pinyin}</div>
+    <div class="meaning">${c.meaning}</div>
+  </div>`;
+  
+  let cells = `<div class="grid-container">`;
+  // Model cell
+  cells += `<div class="cell model"><span class="char">${c.hanzi}</span></div>`;
+  // Ghost cell
+  cells += `<div class="cell ghost"><span class="char">${c.hanzi}</span></div>`;
+  // Empty cells
+  for(let j = 0; j < PRACTICE_CELLS - 2; j++) {
+    cells += `<div class="cell"></div>`;
+  }
+  cells += `</div>`;
+  
+  row.innerHTML = info + cells;
+  container.appendChild(row);
+  
+  // Page break every 14 characters
+  if((i+1) % 14 === 0 && i < unique.length - 1) {
+    const pb = document.createElement('div');
+    pb.className = 'page-break';
+    container.appendChild(pb);
+  }
+});
+</script>
+</body>
+</html>
