@@ -5,75 +5,63 @@
 <title>练习写字 - Feuilles de pratique HSK3</title>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&display=swap');
+  
   @page { margin: 15mm; }
-  body { font-family: "Noto Sans CJK SC", "Noto Sans SC", "SimSun", "STSong", serif; margin: 20px; }
+  body { font-family: "Noto Sans SC", "SimSun", "STSong", serif; margin: 20px; }
   h1 { text-align: center; font-size: 22px; margin-bottom: 5px; }
   .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 20px; }
-
+  
   .section-title {
-    font-size: 16px;
-    font-weight: bold;
-    margin: 25px 0 10px 0;
-    padding: 6px 12px;
-    background: #f5f5f5;
-    border-left: 4px solid #c0392b;
+    font-size: 16px; font-weight: bold;
+    margin: 25px 0 10px 0; padding: 6px 12px;
+    background: #f5f5f5; border-left: 4px solid #c0392b;
     page-break-after: avoid;
   }
-
+  
   .char-row { 
-    display: flex; 
-    align-items: center; 
-    margin-bottom: 12px; 
+    display: flex; align-items: center; margin-bottom: 12px; 
     page-break-inside: avoid; 
   }
   .char-info {
-    width: 110px;
-    font-size: 12px;
-    line-height: 1.3;
-    flex-shrink: 0;
+    width: 110px; font-size: 12px; line-height: 1.3; flex-shrink: 0;
   }
   .char-info .hanzi { font-size: 18px; font-weight: bold; }
   .char-info .pinyin { color: #c0392b; font-size: 11px; }
   .char-info .meaning { color: #666; font-size: 10px; }
-  .grid-container { display: flex; gap: 0; align-items: flex-start; }
+  .grid-container { display: flex; gap: 0; }
   .cell {
-    width: 52px;
-    height: 52px;
+    width: 52px; height: 52px;
     border: 1.5px solid #333;
-    position: relative;
-    box-sizing: border-box;
+    position: relative; box-sizing: border-box;
   }
   .cell::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 50%;
-    width: 0; height: 100%;
+    content: ''; position: absolute;
+    top: 0; left: 50%; width: 0; height: 100%;
     border-left: 1px dashed #ccc;
   }
   .cell::after {
-    content: '';
-    position: absolute;
-    left: 0; top: 50%;
-    width: 100%; height: 0;
+    content: ''; position: absolute;
+    left: 0; top: 50%; width: 100%; height: 0;
     border-top: 1px dashed #ccc;
   }
+  .cell.model { background: #fafafa; }
   .cell .char {
-    position: absolute;
-    top: 50%; left: 50%;
+    position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 36px;
-    z-index: 1;
+    font-size: 36px; z-index: 1;
+    font-family: "Ma Shan Zheng", "KaiTi", "STKaiti", "楷体", serif;
   }
-  .cell.model { background: #fafafa; cursor: pointer; }
   .cell.model .char { color: #333; }
   .cell.ghost .char { color: #e0e0e0; }
-
-  /* HanziWriter overlay - on screen only */
-  .hw-overlay {
-    position: absolute;
-    top: 1px; left: 1px;
-    width: 48px; height: 48px;
-    z-index: 3;
+  
+  /* Stroke order cell */
+  .cell.stroke-order {
+    background: #fff8f0;
+    border-color: #c0392b;
+  }
+  .cell.stroke-order svg { 
+    position: absolute; top: 1px; left: 1px; z-index: 2;
   }
 
   /* Word practice */
@@ -82,24 +70,18 @@
 
   .page-break { page-break-after: always; }
   .footer { text-align: center; color: #aaa; font-size: 10px; margin-top: 30px; }
-
+  
   @media print {
     body { margin: 0; }
     .no-print { display: none; }
-    /* Hide HanziWriter SVGs in print, show static chars */
-    .hw-overlay { display: none !important; }
   }
-
   .print-btn {
     display: block; margin: 20px auto; padding: 12px 30px;
     font-size: 16px; background: #c0392b; color: white; border: none;
     border-radius: 6px; cursor: pointer;
   }
   .print-btn:hover { background: #e74c3c; }
-
-  .legend {
-    text-align: center; font-size: 12px; color: #888; margin-bottom: 15px;
-  }
+  .legend { text-align: center; font-size: 12px; color: #888; margin-bottom: 15px; }
 </style>
 </head>
 <body>
@@ -108,9 +90,7 @@
 
 <h1>练习写字 - Feuilles de Pratique</h1>
 <p class="subtitle">HSK3 - 20 Verbes Essentiels</p>
-<p class="legend no-print">
-  <span>🖱️ Clique sur un caractère modèle pour voir l'animation des traits</span>
-</p>
+<p class="legend no-print">🖱️ Clique sur la case rouge pour animer l'ordre des traits</p>
 
 <div class="section-title">一、Caractères individuels - 单字练习</div>
 <div id="sheets"></div>
@@ -175,59 +155,97 @@ unique.forEach((c, i) => {
   const row = document.createElement('div');
   row.className = 'char-row';
   
-  row.innerHTML = `
-    <div class="char-info">
-      <div class="hanzi">${c.word}</div>
-      <div class="pinyin">${c.pinyin}</div>
-      <div class="meaning">${c.meaning}</div>
-    </div>
-  `;
+  row.innerHTML = `<div class="char-info">
+    <div class="hanzi">${c.word}</div>
+    <div class="pinyin">${c.pinyin}</div>
+    <div class="meaning">${c.meaning}</div>
+  </div>`;
 
   const gridDiv = document.createElement('div');
   gridDiv.className = 'grid-container';
 
-  // Model cell: static char always visible + HanziWriter overlay for screen
+  // Stroke order cell (HanziWriter with stroke numbers)
+  const strokeCell = document.createElement('div');
+  strokeCell.className = 'cell stroke-order';
+  const hwId = 'hw-' + i;
+  const hwDiv = document.createElement('div');
+  hwDiv.id = hwId;
+  hwDiv.style.cssText = 'width:48px;height:48px;';
+  strokeCell.appendChild(hwDiv);
+  gridDiv.appendChild(strokeCell);
+
+  // Model cell (calligraphy)
   const modelCell = document.createElement('div');
   modelCell.className = 'cell model';
-  modelCell.innerHTML = `<span class="char">${c.hanzi}</span>`;
-  
-  const hwDiv = document.createElement('div');
-  hwDiv.className = 'hw-overlay no-print';
-  hwDiv.id = 'hw-' + i;
-  modelCell.appendChild(hwDiv);
+  modelCell.innerHTML = '<span class="char">' + c.hanzi + '</span>';
   gridDiv.appendChild(modelCell);
 
   // Ghost cell
   const ghostCell = document.createElement('div');
   ghostCell.className = 'cell ghost';
-  ghostCell.innerHTML = `<span class="char">${c.hanzi}</span>`;
+  ghostCell.innerHTML = '<span class="char">' + c.hanzi + '</span>';
   gridDiv.appendChild(ghostCell);
 
   // Empty cells
-  for(let j = 0; j < PRACTICE_CELLS - 2; j++) {
-    const cell = document.createElement('div');
-    cell.className = 'cell';
-    gridDiv.appendChild(cell);
+  for(let j = 0; j < PRACTICE_CELLS - 3; j++) {
+    gridDiv.appendChild(Object.assign(document.createElement('div'), {className: 'cell'}));
   }
 
   row.appendChild(gridDiv);
   container.appendChild(row);
 
-  // Init HanziWriter
+  // HanziWriter: show all strokes with numbers
   try {
-    const writer = HanziWriter.create('hw-' + i, c.hanzi, {
+    const writer = HanziWriter.create(hwId, c.hanzi, {
       width: 48, height: 48, padding: 2,
-      showOutline: true, showCharacter: true,
+      showOutline: true, showCharacter: false,
       strokeColor: '#c0392b', outlineColor: '#ddd',
-      strokeAnimationSpeed: 1, delayBetweenStrokes: 300,
     });
-    modelCell.addEventListener('click', () => writer.animateCharacter());
-  } catch(e) {}
+    // Show strokes one by one with different colors for order
+    const colors = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#ff5722','#795548','#607d8b','#00bcd4','#8bc34a','#ff9800','#673ab7','#f44336','#4caf50','#2196f3','#ff5252','#69f0ae'];
+    
+    // Load char data to get stroke count, then show numbered
+    fetch('https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/' + c.hanzi + '.json')
+      .then(r => r.json())
+      .then(data => {
+        const n = data.strokes.length;
+        // Show the character with all strokes
+        writer.showCharacter();
+        // Add stroke numbers as overlay
+        const svg = strokeCell.querySelector('svg');
+        if(svg && data.medians) {
+          data.medians.forEach((median, si) => {
+            if(median.length > 0) {
+              // Put number at start of each stroke
+              const startPt = median[0];
+              // HanziWriter uses 1024x1024 coord system, our SVG is 48x48
+              const x = (startPt[0] / 1024) * 48;
+              const y = ((1024 - startPt[1]) / 1024) * 48;
+              const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+              text.setAttribute('x', x);
+              text.setAttribute('y', y);
+              text.setAttribute('font-size', '8');
+              text.setAttribute('font-weight', 'bold');
+              text.setAttribute('fill', '#c0392b');
+              text.setAttribute('font-family', 'Arial, sans-serif');
+              text.textContent = (si + 1);
+              svg.appendChild(text);
+            }
+          });
+        }
+      });
 
-  if((i+1) % 14 === 0 && i < unique.length - 1) {
-    const pb = document.createElement('div');
-    pb.className = 'page-break';
-    container.appendChild(pb);
+    strokeCell.style.cursor = 'pointer';
+    strokeCell.addEventListener('click', () => {
+      writer.hideCharacter();
+      writer.animateCharacter();
+    });
+  } catch(e) {
+    strokeCell.innerHTML = '<span class="char" style="color:#c0392b">' + c.hanzi + '</span>';
+  }
+
+  if((i+1) % 13 === 0 && i < unique.length - 1) {
+    container.appendChild(Object.assign(document.createElement('div'), {className: 'page-break'}));
   }
 });
 
@@ -238,13 +256,11 @@ const WORD_REPS = 4;
 words.forEach((w, wi) => {
   const row = document.createElement('div');
   row.className = 'char-row';
-  row.innerHTML = `
-    <div class="char-info">
-      <div class="hanzi">${w.word}</div>
-      <div class="pinyin">${w.pinyin}</div>
-      <div class="meaning">${w.meaning}</div>
-    </div>
-  `;
+  row.innerHTML = `<div class="char-info">
+    <div class="hanzi">${w.word}</div>
+    <div class="pinyin">${w.pinyin}</div>
+    <div class="meaning">${w.meaning}</div>
+  </div>`;
 
   const gridDiv = document.createElement('div');
   gridDiv.className = 'grid-container';
@@ -255,14 +271,11 @@ words.forEach((w, wi) => {
   for(const ch of w.word) {
     const cell = document.createElement('div');
     cell.className = 'cell model';
-    cell.innerHTML = `<span class="char">${ch}</span>`;
+    cell.innerHTML = '<span class="char">' + ch + '</span>';
     modelPair.appendChild(cell);
   }
   gridDiv.appendChild(modelPair);
-
-  const sep1 = document.createElement('div');
-  sep1.className = 'pair-separator';
-  gridDiv.appendChild(sep1);
+  gridDiv.appendChild(Object.assign(document.createElement('div'), {className: 'pair-separator'}));
 
   // Ghost pair
   const ghostPair = document.createElement('div');
@@ -270,23 +283,17 @@ words.forEach((w, wi) => {
   for(const ch of w.word) {
     const cell = document.createElement('div');
     cell.className = 'cell ghost';
-    cell.innerHTML = `<span class="char">${ch}</span>`;
+    cell.innerHTML = '<span class="char">' + ch + '</span>';
     ghostPair.appendChild(cell);
   }
   gridDiv.appendChild(ghostPair);
 
-  // Empty practice pairs
+  // Practice pairs
   for(let r = 0; r < WORD_REPS; r++) {
-    const sep = document.createElement('div');
-    sep.className = 'pair-separator';
-    gridDiv.appendChild(sep);
+    gridDiv.appendChild(Object.assign(document.createElement('div'), {className: 'pair-separator'}));
     const pair = document.createElement('div');
     pair.className = 'word-pair';
-    for(const ch of w.word) {
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      pair.appendChild(cell);
-    }
+    for(const ch of w.word) pair.appendChild(Object.assign(document.createElement('div'), {className: 'cell'}));
     gridDiv.appendChild(pair);
   }
 
@@ -294,9 +301,7 @@ words.forEach((w, wi) => {
   wordContainer.appendChild(row);
 
   if((wi+1) % 10 === 0 && wi < words.length - 1) {
-    const pb = document.createElement('div');
-    pb.className = 'page-break';
-    wordContainer.appendChild(pb);
+    wordContainer.appendChild(Object.assign(document.createElement('div'), {className: 'page-break'}));
   }
 });
 </script>
