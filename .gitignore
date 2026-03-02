@@ -1,3 +1,5 @@
--e node_modules/
+node_modules/
 *.pdf
 preview.png
+package-lock.json
+package.json
