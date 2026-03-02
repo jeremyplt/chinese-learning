@@ -211,23 +211,36 @@ unique.forEach((c, i) => {
         const n = data.strokes.length;
         // Show the character with all strokes
         writer.showCharacter();
-        // Add stroke numbers as overlay
+        // Add stroke numbers as overlay with white background circles
         const svg = strokeCell.querySelector('svg');
         if(svg && data.medians) {
           data.medians.forEach((median, si) => {
             if(median.length > 0) {
-              // Put number at start of each stroke
-              const startPt = median[0];
-              // HanziWriter uses 1024x1024 coord system, our SVG is 48x48
-              const x = (startPt[0] / 1024) * 48;
-              const y = ((1024 - startPt[1]) / 1024) * 48;
+              // Use a point ~20% along the stroke for better placement
+              const ptIndex = Math.min(Math.floor(median.length * 0.15), median.length - 1);
+              const pt = median[ptIndex];
+              const x = (pt[0] / 1024) * 48;
+              const y = ((1024 - pt[1]) / 1024) * 48;
+              
+              // White circle background for visibility
+              const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+              circle.setAttribute('cx', x);
+              circle.setAttribute('cy', y - 1);
+              circle.setAttribute('r', '6');
+              circle.setAttribute('fill', 'white');
+              circle.setAttribute('stroke', '#c0392b');
+              circle.setAttribute('stroke-width', '1');
+              svg.appendChild(circle);
+              
+              // Number text
               const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
               text.setAttribute('x', x);
-              text.setAttribute('y', y);
-              text.setAttribute('font-size', '8');
+              text.setAttribute('y', y + 2);
+              text.setAttribute('font-size', '9');
               text.setAttribute('font-weight', 'bold');
               text.setAttribute('fill', '#c0392b');
               text.setAttribute('font-family', 'Arial, sans-serif');
+              text.setAttribute('text-anchor', 'middle');
               text.textContent = (si + 1);
               svg.appendChild(text);
             }
