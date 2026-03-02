@@ -211,32 +211,43 @@ unique.forEach((c, i) => {
         const n = data.strokes.length;
         // Show the character with all strokes
         writer.showCharacter();
-        // Add stroke numbers as overlay with white background circles
+        // Add stroke numbers offset away from strokes
         const svg = strokeCell.querySelector('svg');
         if(svg && data.medians) {
+          const cx = 24, cy = 24; // center of 48x48 cell
           data.medians.forEach((median, si) => {
-            if(median.length > 0) {
-              // Use a point ~20% along the stroke for better placement
-              const ptIndex = Math.min(Math.floor(median.length * 0.15), median.length - 1);
-              const pt = median[ptIndex];
-              const x = (pt[0] / 1024) * 48;
-              const y = ((1024 - pt[1]) / 1024) * 48;
+            if(median.length >= 2) {
+              const startPt = median[0];
+              const nextPt = median[1];
+              // Start position in SVG coords
+              let sx = (startPt[0] / 1024) * 48;
+              let sy = ((1024 - startPt[1]) / 1024) * 48;
+              // Stroke direction vector
+              let dx = (nextPt[0] - startPt[0]);
+              let dy = -(nextPt[1] - startPt[1]); // flip Y
+              let len = Math.sqrt(dx*dx + dy*dy) || 1;
+              // Perpendicular direction (rotate 90°), pick side away from center
+              let px = -dy / len;
+              let py = dx / len;
+              // Check which side is away from center
+              let testX = sx + px * 5;
+              let testY = sy + py * 5;
+              let distCenter = (testX-cx)*(testX-cx) + (testY-cy)*(testY-cy);
+              let testX2 = sx - px * 5;
+              let testY2 = sy - py * 5;
+              let distCenter2 = (testX2-cx)*(testX2-cx) + (testY2-cy)*(testY2-cy);
+              // Pick the side further from center
+              let offX, offY;
+              if(distCenter >= distCenter2) { offX = px * 7; offY = py * 7; }
+              else { offX = -px * 7; offY = -py * 7; }
               
-              // White circle background for visibility
-              const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              circle.setAttribute('cx', x);
-              circle.setAttribute('cy', y - 1);
-              circle.setAttribute('r', '6');
-              circle.setAttribute('fill', 'white');
-              circle.setAttribute('stroke', '#c0392b');
-              circle.setAttribute('stroke-width', '1');
-              svg.appendChild(circle);
+              let nx = Math.max(4, Math.min(44, sx + offX));
+              let ny = Math.max(6, Math.min(46, sy + offY));
               
-              // Number text
               const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-              text.setAttribute('x', x);
-              text.setAttribute('y', y + 2);
-              text.setAttribute('font-size', '9');
+              text.setAttribute('x', nx);
+              text.setAttribute('y', ny + 3);
+              text.setAttribute('font-size', '7');
               text.setAttribute('font-weight', 'bold');
               text.setAttribute('fill', '#c0392b');
               text.setAttribute('font-family', 'Arial, sans-serif');
