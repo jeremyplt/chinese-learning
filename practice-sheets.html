@@ -6,11 +6,10 @@
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 <style>
   @page { margin: 15mm; }
-  body { font-family: "Noto Sans SC", "SimSun", "STSong", serif; margin: 20px; }
+  body { font-family: "Noto Sans CJK SC", "Noto Sans SC", "SimSun", "STSong", serif; margin: 20px; }
   h1 { text-align: center; font-size: 22px; margin-bottom: 5px; }
   .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 20px; }
 
-  /* Section headers */
   .section-title {
     font-size: 16px;
     font-weight: bold;
@@ -58,55 +57,37 @@
     width: 100%; height: 0;
     border-top: 1px dashed #ccc;
   }
-  .cell.model {
-    background: #fafafa;
-    cursor: pointer;
-  }
-  .cell.model .char {
+  .cell .char {
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     font-size: 36px;
-    color: #333;
     z-index: 1;
   }
-  .cell.ghost .char {
+  .cell.model { background: #fafafa; cursor: pointer; }
+  .cell.model .char { color: #333; }
+  .cell.ghost .char { color: #e0e0e0; }
+
+  /* HanziWriter overlay - on screen only */
+  .hw-overlay {
     position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 36px;
-    color: #e0e0e0;
-    z-index: 1;
+    top: 1px; left: 1px;
+    width: 48px; height: 48px;
+    z-index: 3;
   }
 
-  /* HanziWriter model cell */
-  .cell.model svg { z-index: 2; position: relative; }
-  .cell.model .stroke-hint {
-    display: none; /* shown on print */
-  }
-
-  /* Word practice: double cells */
-  .word-pair {
-    display: flex;
-    gap: 0;
-  }
-  .word-pair .cell {
-    width: 52px;
-    height: 52px;
-  }
-  .pair-separator {
-    width: 8px;
-    flex-shrink: 0;
-  }
+  /* Word practice */
+  .word-pair { display: flex; gap: 0; }
+  .pair-separator { width: 8px; flex-shrink: 0; }
 
   .page-break { page-break-after: always; }
   .footer { text-align: center; color: #aaa; font-size: 10px; margin-top: 30px; }
-  
+
   @media print {
     body { margin: 0; }
     .no-print { display: none; }
-    .cell.model svg { display: none !important; }
-    .cell.model .stroke-hint { display: block !important; }
+    /* Hide HanziWriter SVGs in print, show static chars */
+    .hw-overlay { display: none !important; }
   }
 
   .print-btn {
@@ -119,7 +100,6 @@
   .legend {
     text-align: center; font-size: 12px; color: #888; margin-bottom: 15px;
   }
-  .legend span { margin: 0 10px; }
 </style>
 </head>
 <body>
@@ -132,11 +112,9 @@
   <span>🖱️ Clique sur un caractère modèle pour voir l'animation des traits</span>
 </p>
 
-<!-- SECTION 1: Individual characters -->
 <div class="section-title">一、Caractères individuels - 单字练习</div>
 <div id="sheets"></div>
 
-<!-- SECTION 2: Compound word practice -->
 <div class="section-title" style="margin-top: 35px;">二、Mots composés - 词语练习</div>
 <div id="word-sheets"></div>
 
@@ -177,11 +155,9 @@ const chars = [
   {hanzi: "受", pinyin: "shòu", meaning: "recevoir", word: "接受"},
 ];
 
-// Deduplicate by hanzi
 const seen = new Set();
 const unique = chars.filter(c => { if(seen.has(c.hanzi)) return false; seen.add(c.hanzi); return true; });
 
-// Extract compound words (2+ chars)
 const wordSet = new Set();
 const words = [];
 chars.forEach(c => {
@@ -191,7 +167,7 @@ chars.forEach(c => {
   }
 });
 
-// ===== SECTION 1: Individual characters with stroke order =====
+// ===== SECTION 1: Individual characters =====
 const container = document.getElementById('sheets');
 const PRACTICE_CELLS = 7;
 
@@ -199,33 +175,26 @@ unique.forEach((c, i) => {
   const row = document.createElement('div');
   row.className = 'char-row';
   
-  const infoDiv = document.createElement('div');
-  infoDiv.className = 'char-info';
-  infoDiv.innerHTML = `
-    <div class="hanzi">${c.word}</div>
-    <div class="pinyin">${c.pinyin}</div>
-    <div class="meaning">${c.meaning}</div>
+  row.innerHTML = `
+    <div class="char-info">
+      <div class="hanzi">${c.word}</div>
+      <div class="pinyin">${c.pinyin}</div>
+      <div class="meaning">${c.meaning}</div>
+    </div>
   `;
-  row.appendChild(infoDiv);
 
   const gridDiv = document.createElement('div');
   gridDiv.className = 'grid-container';
 
-  // Model cell with HanziWriter
+  // Model cell: static char always visible + HanziWriter overlay for screen
   const modelCell = document.createElement('div');
   modelCell.className = 'cell model';
-  const writerId = 'hw-' + i;
-  const writerTarget = document.createElement('div');
-  writerTarget.id = writerId;
-  writerTarget.style.cssText = 'width:48px;height:48px;position:absolute;top:1px;left:1px;z-index:2;';
-  modelCell.appendChild(writerTarget);
+  modelCell.innerHTML = `<span class="char">${c.hanzi}</span>`;
   
-  // Fallback for print
-  const printFallback = document.createElement('div');
-  printFallback.className = 'stroke-hint';
-  printFallback.innerHTML = `<span class="char">${c.hanzi}</span>`;
-  modelCell.appendChild(printFallback);
-  
+  const hwDiv = document.createElement('div');
+  hwDiv.className = 'hw-overlay no-print';
+  hwDiv.id = 'hw-' + i;
+  modelCell.appendChild(hwDiv);
   gridDiv.appendChild(modelCell);
 
   // Ghost cell
@@ -236,9 +205,9 @@ unique.forEach((c, i) => {
 
   // Empty cells
   for(let j = 0; j < PRACTICE_CELLS - 2; j++) {
-    const emptyCell = document.createElement('div');
-    emptyCell.className = 'cell';
-    gridDiv.appendChild(emptyCell);
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    gridDiv.appendChild(cell);
   }
 
   row.appendChild(gridDiv);
@@ -246,30 +215,15 @@ unique.forEach((c, i) => {
 
   // Init HanziWriter
   try {
-    const writer = HanziWriter.create(writerId, c.hanzi, {
-      width: 48,
-      height: 48,
-      padding: 2,
-      showOutline: true,
-      showCharacter: true,
-      strokeColor: '#333',
-      outlineColor: '#ddd',
-      strokeAnimationSpeed: 1,
-      delayBetweenStrokes: 300,
-      radicalColor: '#c0392b',
-      showStrokeOrder: true,
+    const writer = HanziWriter.create('hw-' + i, c.hanzi, {
+      width: 48, height: 48, padding: 2,
+      showOutline: true, showCharacter: true,
+      strokeColor: '#c0392b', outlineColor: '#ddd',
+      strokeAnimationSpeed: 1, delayBetweenStrokes: 300,
     });
-    
-    // Click to animate
-    modelCell.addEventListener('click', () => {
-      writer.animateCharacter();
-    });
-  } catch(e) {
-    // Fallback: just show the character
-    writerTarget.innerHTML = `<span style="font-size:36px;display:flex;align-items:center;justify-content:center;height:100%;">${c.hanzi}</span>`;
-  }
+    modelCell.addEventListener('click', () => writer.animateCharacter());
+  } catch(e) {}
 
-  // Page break every 14
   if((i+1) % 14 === 0 && i < unique.length - 1) {
     const pb = document.createElement('div');
     pb.className = 'page-break';
@@ -277,22 +231,20 @@ unique.forEach((c, i) => {
   }
 });
 
-// ===== SECTION 2: Compound word practice =====
+// ===== SECTION 2: Compound words =====
 const wordContainer = document.getElementById('word-sheets');
-const WORD_PRACTICE_REPS = 4; // how many times to practice the full word
+const WORD_REPS = 4;
 
 words.forEach((w, wi) => {
   const row = document.createElement('div');
   row.className = 'char-row';
-
-  const infoDiv = document.createElement('div');
-  infoDiv.className = 'char-info';
-  infoDiv.innerHTML = `
-    <div class="hanzi">${w.word}</div>
-    <div class="pinyin">${w.pinyin}</div>
-    <div class="meaning">${w.meaning}</div>
+  row.innerHTML = `
+    <div class="char-info">
+      <div class="hanzi">${w.word}</div>
+      <div class="pinyin">${w.pinyin}</div>
+      <div class="meaning">${w.meaning}</div>
+    </div>
   `;
-  row.appendChild(infoDiv);
 
   const gridDiv = document.createElement('div');
   gridDiv.className = 'grid-container';
@@ -308,7 +260,6 @@ words.forEach((w, wi) => {
   }
   gridDiv.appendChild(modelPair);
 
-  // Separator
   const sep1 = document.createElement('div');
   sep1.className = 'pair-separator';
   gridDiv.appendChild(sep1);
@@ -325,25 +276,23 @@ words.forEach((w, wi) => {
   gridDiv.appendChild(ghostPair);
 
   // Empty practice pairs
-  for(let r = 0; r < WORD_PRACTICE_REPS; r++) {
+  for(let r = 0; r < WORD_REPS; r++) {
     const sep = document.createElement('div');
     sep.className = 'pair-separator';
     gridDiv.appendChild(sep);
-
-    const emptyPair = document.createElement('div');
-    emptyPair.className = 'word-pair';
+    const pair = document.createElement('div');
+    pair.className = 'word-pair';
     for(const ch of w.word) {
       const cell = document.createElement('div');
       cell.className = 'cell';
-      emptyPair.appendChild(cell);
+      pair.appendChild(cell);
     }
-    gridDiv.appendChild(emptyPair);
+    gridDiv.appendChild(pair);
   }
 
   row.appendChild(gridDiv);
   wordContainer.appendChild(row);
 
-  // Page break every 10 words
   if((wi+1) % 10 === 0 && wi < words.length - 1) {
     const pb = document.createElement('div');
     pb.className = 'page-break';
